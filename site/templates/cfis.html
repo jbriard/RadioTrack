@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Radios SNSM - Gestion des CFI</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/styles.css') }}">
+    <link rel="icon" href="{{ url_for('static', path='/images/favicon.png') }}" type="image/png" />
+</head>
+<body>
+    <header class="app-header">
+        <div class="logo">
+            <img src="{{ url_for('static', path='/images/Les_Sauveteurs_en_Mer.webp') }}" alt="Logo SNSM">
+            <span>Gestion des Radios</span>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="/dashboard">Tableau de bord</a></li>
+                <li><a href="/radios">Radios</a></li>
+                <li><a href="/personnes">Personnes</a></li>
+                <li><a href="/equipes">Équipes</a></li>
+                <li><a href="/cfis" class="active">CFI</a></li>
+            </ul>
+        </nav>
+        <div class="user-menu">
+            <span>{{ user.username }}</span>
+            <a href="/logout" class="logout-btn">Déconnexion</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar">
+            <nav>
+                <ul>
+                    <li><a href="/dashboard">Tableau de bord</a></li>
+                    <li><a href="/radios">Gestion des radios</a></li>
+                    <li><a href="/prets">Prêt/Retour</a></li>
+                    <li><a href="/personnes">Gestion des personnes</a></li>
+                    <li><a href="/equipes">Gestion des équipes</a></li>
+                    <li><a href="/cfis" class="active">Gestion des CFI</a></li>
+                    <li><a href="/historique">Historique des prêts</a></li>
+                    <li><a href="/maintenance">Maintenance</a></li>
+                    <li><a href="/etiquettes">Impression d'étiquettes</a></li>
+                    <li><a href="/sauvegardes">Sauvegardes</a></li>
+                    <li><a href="/parametres">Paramètres</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <h1>Gestion des Centres de Formation et d'Intervention</h1>
+
+            <div class="controls">
+                <div class="search-container">
+                    <input type="text" id="search-cfi" placeholder="Rechercher un CFI...">
+                    <button id="search-btn" class="action-btn">Rechercher</button>
+                </div>
+                <button id="add-cfi-btn" class="action-btn">Ajouter un CFI</button>
+            </div>
+
+            <div class="data-preview">
+                <div class="view-controls">
+                    <button id="toggle-view" class="view-switch">Vue carte</button>
+                </div>
+                <div id="table-container" class="table-responsive mobile-friendly">
+                    <table id="cfis-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nom</th>
+                                <th>Responsable</th>
+                                <th>Email</th>
+                                <th>Téléphone</th>
+                                <th>Nombre de membres</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cfis-body">
+                            <!-- Ce tableau sera rempli par JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination">
+                    <button id="prev-page" class="action-btn" disabled>Précédent</button>
+                    <span id="page-info">Page 1</span>
+                    <button id="next-page" class="action-btn">Suivant</button>
+                </div>
+            </div>
+
+            <!-- Modal pour ajouter/modifier un CFI -->
+            <div id="cfi-modal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h2 id="modal-title">Ajouter un CFI</h2>
+                    <form id="cfi-form">
+                        <input type="hidden" id="cfi-id">
+                        <div class="form-group">
+                            <label for="nom">Nom:</label>
+                            <input type="text" id="nom" name="nom" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="responsable">Responsable:</label>
+                            <input type="text" id="responsable" name="responsable" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="adresse">Adresse:</label>
+                            <textarea id="adresse" name="adresse" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="telephone">Téléphone:</label>
+                            <input type="tel" id="telephone" name="telephone">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email:</label>
+                            <input type="email" id="email" name="email">
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" id="submit-cfi" class="action-btn">Enregistrer</button>
+                            <button type="button" id="cancel-cfi" class="cancel-btn">Annuler</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Modal de confirmation de suppression -->
+            <div id="confirm-delete-modal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h2>Confirmer la suppression</h2>
+                    <p>Êtes-vous sûr de vouloir supprimer ce CFI ?</p>
+                    <p>Cette action est irréversible.</p>
+                    <div class="form-group">
+                        <button id="confirm-delete" class="action-btn" style="background-color: #dc3545;">Supprimer</button>
+                        <button id="cancel-delete" class="cancel-btn">Annuler</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal pour voir/gérer les membres du CFI -->
+            <div id="membres-modal" class="modal" style="display: none;">
+                <div class="modal-content" style="max-width: 800px;">
+                    <span class="close">&times;</span>
+                    <h2>Membres du CFI <span id="cfi-name"></span></h2>
+                    
+                    <div class="controls" style="margin-bottom: 20px;">
+                        <div class="search-container">
+                            <input type="text" id="search-membre" placeholder="Rechercher un membre...">
+                            <button id="search-membre-btn" class="action-btn">Rechercher</button>
+                        </div>
+                        <button id="add-membre-btn" class="action-btn">Ajouter un membre</button>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table id="membres-table">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Nom</th>
+                                    <th>Prénom</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="membres-body">
+                                <!-- Ce tableau sera rempli par JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="form-group" style="margin-top: 20px; text-align: right;">
+                        <button id="close-membres" class="cancel-btn">Fermer</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal pour ajouter un membre au CFI -->
+            <div id="add-membre-modal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h2>Ajouter un membre au CFI</h2>
+                    
+                    <div class="form-group">
+                        <label for="search-available-membre">Rechercher:</label>
+                        <input type="text" id="search-available-membre" placeholder="Nom ou prénom...">
+                    </div>
+                    
+                    <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                        <table id="available-membres-table">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Nom</th>
+                                    <th>Prénom</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="available-membres-body">
+                                <!-- Ce tableau sera rempli par JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="form-group" style="margin-top: 20px; text-align: right;">
+                        <button id="cancel-add-membre" class="cancel-btn">Fermer</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <footer class="app-footer">
+        <p>&copy; 2025 SNSM - Système de gestion des radios</p>
+    </footer>
+
+    <script src="{{ url_for('static', path='/js/cfi.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,563 @@
+:root {
+    --primary-color: #003362;
+    --secondary-color: #e76f51;
+    --background-color: #f8f9fa;
+    --sidebar-color: #e9ecef;
+    --text-color: #333;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --info-color: #17a2b8;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+.app-header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.5rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.logo img {
+    height: 40px;
+    margin-right: 10px;
+}
+
+.app-header nav ul {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.app-header nav ul li {
+    margin: 0 10px;
+}
+
+.app-header nav ul li a {
+    color: white;
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+}
+
+.app-header nav ul li a.active,
+.app-header nav ul li a:hover {
+    background-color: rgba(255,255,255,0.2);
+}
+
+.user-menu {
+    display: flex;
+    align-items: center;
+}
+
+.user-menu span {
+    margin-right: 10px;
+}
+
+.logout-btn {
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+}
+
+.container {
+    display: flex;
+    min-height: calc(100vh - 100px);
+}
+
+.sidebar {
+    width: 250px;
+    background-color: var(--sidebar-color);
+    padding: 1rem;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+}
+
+.sidebar nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar nav ul li {
+    margin-bottom: 5px;
+}
+
+.sidebar nav ul li a {
+    display: block;
+    padding: 10px 15px;
+    color: var(--text-color);
+    text-decoration: none;
+    border-radius: 4px;
+}
+
+.sidebar nav ul li a.active,
+.sidebar nav ul li a:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.content {
+    flex: 1;
+    padding: 1rem 2rem;
+}
+
+.dashboard-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 2rem;
+}
+
+.card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    padding: 1.5rem;
+}
+
+.card h2 {
+    margin-top: 0;
+    color: var(--primary-color);
+    font-size: 1.3rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.action-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    margin: 5px 0;
+    cursor: pointer;
+    width: 100%;
+}
+
+.action-btn:hover {
+    background-color: #005f8b;
+}
+
+.action-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.data-preview {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.data-preview h2 {
+    color: var(--primary-color);
+    margin-top: 0;
+}
+
+.controls {
+    margin-bottom: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.search-container {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    gap: 10px;
+}
+
+.search-container input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.filter-container {
+    display: flex;
+    align-items: center;
+}
+
+.filter-container select {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table th,
+table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+table th {
+    background-color: #f1f1f1;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.actions-cell {
+    white-space: nowrap;
+    text-align: center;
+}
+
+.actions-cell .action-btn {
+    width: auto;
+    padding: 4px 8px;
+    margin: 0 2px;
+    font-size: 12px;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.status-available {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.status-loaned {
+    background-color: var(--warning-color);
+    color: #333;
+}
+
+.status-maintenance {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 600px;
+    position: relative;
+}
+
+.close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+}
+
+.checkbox-group input {
+    width: auto;
+    margin-right: 10px;
+}
+
+.checkbox-group label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0;
+}
+
+.cancel-btn {
+    background-color: #ccc;
+    color: #333;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.pagination button {
+    width: auto;
+    margin: 0 10px;
+}
+
+.pagination span {
+    font-weight: bold;
+}
+
+/* Messages flash */
+.flash-message {
+    padding: 10px 15px;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+    position: relative;
+}
+
+.flash-message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.flash-message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.flash-message.info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+.flash-message .close-flash {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    cursor: pointer;
+}
+
+.app-footer {
+    background-color: var(--primary-color);
+    color: white;
+    text-align: center;
+    padding: 1rem;
+    margin-top: auto;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        padding: 0.5rem;
+    }
+    
+    .content {
+        padding: 1rem;
+    }
+    
+    .app-header {
+        flex-direction: column;
+        padding: 0.5rem;
+    }
+    
+    .app-header nav ul {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .user-menu {
+        margin-top: 10px;
+    }
+    
+    .dashboard-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .search-container,
+    .filter-container {
+        margin-bottom: 10px;
+    }
+    
+    .modal-content {
+        width: 95%;
+        padding: 1rem;
+    }
+}
+
+/* Ajoutez ce code à votre fichier CSS (styles.css) */
+
+/* Styles pour les tableaux responsives */
+@media screen and (max-width: 992px) {
+    /* Style pour les tableaux sur petits écrans */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    table {
+        min-width: 800px; /* Largeur minimale pour éviter une compression excessive */
+    }
+}
+
+@media screen and (max-width: 768px) {
+    /* Réduire la taille du texte et des cellules sur tablette */
+    table th,
+    table td {
+        padding: 8px 6px;
+        font-size: 14px;
+    }
+    
+    .actions-cell .action-btn {
+        padding: 3px 6px;
+        font-size: 11px;
+    }
+    
+    /* Masquer certaines colonnes moins importantes sur les petits écrans */
+    .table-responsive.mobile-friendly table th:nth-child(4),
+    .table-responsive.mobile-friendly table td:nth-child(4),
+    .table-responsive.mobile-friendly table th:nth-child(5),
+    .table-responsive.mobile-friendly table td:nth-child(5) {
+        display: none;
+    }
+}
+
+/* Version alternative - tableau card-like sur mobile */
+@media screen and (max-width: 576px) {
+    .card-view-enabled table,
+    .card-view-enabled thead,
+    .card-view-enabled tbody,
+    .card-view-enabled th,
+    .card-view-enabled td,
+    .card-view-enabled tr {
+        display: block;
+    }
+    
+    .card-view-enabled thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+    
+    .card-view-enabled tr {
+        border: 1px solid #ddd;
+        margin-bottom: 10px;
+        border-radius: 8px;
+        background-color: #fff;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .card-view-enabled td {
+        border: none;
+        border-bottom: 1px solid #eee;
+        position: relative;
+        padding-left: 50%;
+        text-align: right;
+        min-height: 30px;
+    }
+    
+    .card-view-enabled td:last-child {
+        border-bottom: 0;
+    }
+    
+    .card-view-enabled td:before {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        text-align: left;
+        font-weight: bold;
+        content: attr(data-title);
+    }
+}
+
+/* Style pour le contrôle de vue (normal vs carte) */
+.view-controls {
+    margin-bottom: 10px;
+    text-align: right;
+}
+
+.view-switch {
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.view-switch:hover {
+    background-color: #e0e0e0;
+}

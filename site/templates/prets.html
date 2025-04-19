@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Radios SNSM - Prêt/Retour</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/styles.css') }}">
+    <link rel="icon" href="{{ url_for('static', path='/images/favicon.png') }}" type="image/png" />
+</head>
+<body>
+    <header class="app-header">
+        <div class="logo">
+            <img src="{{ url_for('static', path='/images/Les_Sauveteurs_en_Mer.webp') }}" alt="Logo SNSM">
+            <span>Gestion des Radios</span>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="/dashboard">Tableau de bord</a></li>
+                <li><a href="/radios">Radios</a></li>
+                <li><a href="/personnes">Personnes</a></li>
+                <li><a href="/equipes">Équipes</a></li>
+            </ul>
+        </nav>
+        <div class="user-menu">
+            <span>{{ user.username }}</span>
+            <a href="/logout" class="logout-btn">Déconnexion</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar">
+            <nav>
+                <ul>
+                    <li><a href="/dashboard">Tableau de bord</a></li>
+                    <li><a href="/radios">Gestion des radios</a></li>
+                    <li><a href="/prets" class="active">Prêt/Retour</a></li>
+                    <li><a href="/personnes">Gestion des personnes</a></li>
+                    <li><a href="/equipes">Gestion des équipes</a></li>
+                    <li><a href="/cfis">Gestion des CFI</a></li>
+                    <li><a href="/historique">Historique des prêts</a></li>
+                    <li><a href="/maintenance">Maintenance</a></li>
+                    <li><a href="/etiquettes">Impression d'étiquettes</a></li>
+                    <li><a href="/sauvegardes">Sauvegardes</a></li>
+                    <li><a href="/parametres">Paramètres</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <h1>Prêt/Retour de Radios</h1>
+
+            <div class="dashboard-cards">
+                <div class="card">
+                    <h2>Prêt de Radio</h2>
+                    <form id="loan-form">
+                        <div class="form-group">
+                            <label for="radio-code">Code radio:</label>
+                            <input type="text" id="radio-code" name="radio_code" placeholder="Scanner ou saisir le code..." required>
+                            <div id="radio-info" class="form-info"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="personne-code">Code personne:</label>
+                            <input type="text" id="personne-code" name="personne_code" placeholder="Scanner ou saisir le code..." required>
+                            <div id="personne-info" class="form-info"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="accessoires">Accessoires:</label>
+                            <select id="accessoires" name="accessoires" required>
+                                <option value="aucun">Aucun</option>
+                                <option value="oreillettes">Oreillettes</option>
+                                <option value="micro">Micro</option>
+                                <option value="les deux">Les deux (oreillettes + micro)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="commentaire-pret">Commentaire:</label>
+                            <textarea id="commentaire-pret" name="commentaire" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" id="submit-loan" class="action-btn">Enregistrer le prêt</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2>Retour de Radio</h2>
+                    <form id="return-form">
+                        <div class="form-group">
+                            <label for="return-radio-code">Code radio:</label>
+                            <input type="text" id="return-radio-code" name="return_radio_code" placeholder="Scanner ou saisir le code..." required>
+                            <div id="return-info" class="form-info"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="commentaire-retour">Commentaire sur l'état (optionnel):</label>
+                            <textarea id="commentaire-retour" name="commentaire_retour" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" id="submit-return" class="action-btn">Enregistrer le retour</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="data-preview">
+                <h2>Radios actuellement en prêt</h2>
+                <div class="table-responsive">
+                    <table id="active-loans-table">
+                        <thead>
+                            <tr>
+                                <th>Code Radio</th>
+                                <th>Marque/Modèle</th>
+                                <th>Emprunteur</th>
+                                <th>Accessoires</th>
+                                <th>Date d'emprunt</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="active-loans-body">
+                            <!-- Ce tableau sera rempli par JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Modal de confirmation -->
+            <div id="confirm-modal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h2 id="confirm-title">Confirmation</h2>
+                    <p id="confirm-message"></p>
+                    <div class="form-group">
+                        <button id="confirm-action" class="action-btn">Confirmer</button>
+                        <button id="cancel-action" class="cancel-btn">Annuler</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <footer class="app-footer">
+        <p>&copy; 2025 SNSM - Système de gestion des radios</p>
+    </footer>
+
+    <script src="{{ url_for('static', path='/js/pret.js') }}"></script>
+</body>
+</html>

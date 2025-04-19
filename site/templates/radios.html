@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Radios SNSM - Gestion des Radios</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/styles.css') }}">
+    <link rel="icon" href="{{ url_for('static', path='/images/favicon.png') }}" type="image/png" />
+</head>
+<body>
+    <header class="app-header">
+        <div class="logo">
+            <img src="{{ url_for('static', path='/images/Les_Sauveteurs_en_Mer.webp') }}" alt="Logo SNSM">
+            <span>Gestion des Radios</span>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="/dashboard">Tableau de bord</a></li>
+                <li><a href="/radios" class="active">Radios</a></li>
+                <li><a href="/personnes">Personnes</a></li>
+                <li><a href="/equipes">Équipes</a></li>
+            </ul>
+        </nav>
+        <div class="user-menu">
+            <span>{{ user.username }}</span>
+            <a href="/logout" class="logout-btn">Déconnexion</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar">
+            <nav>
+                <ul>
+                    <li><a href="/dashboard">Tableau de bord</a></li>
+                    <li><a href="/radios" class="active">Gestion des radios</a></li>
+                    <li><a href="/prets">Prêt/Retour</a></li>
+                    <li><a href="/personnes">Gestion des personnes</a></li>
+                    <li><a href="/equipes">Gestion des équipes</a></li>
+                    <li><a href="/cfis">Gestion des CFI</a></li>
+                    <li><a href="/historique">Historique des prêts</a></li>
+                    <li><a href="/maintenance">Maintenance</a></li>
+                    <li><a href="/etiquettes">Impression d'étiquettes</a></li>
+                    <li><a href="/sauvegardes">Sauvegardes</a></li>
+                    <li><a href="/parametres">Paramètres</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <h1>Gestion des Radios</h1>
+
+            <div class="controls">
+                <div class="search-container">
+                    <input type="text" id="search-radio" placeholder="Rechercher une radio...">
+                    <button id="search-btn" class="action-btn">Rechercher</button>
+                </div>
+                <div class="filter-container">
+                    <select id="filter-status">
+                        <option value="">Tous les statuts</option>
+                        <option value="disponible">Disponible</option>
+                        <option value="en_pret">En prêt</option>
+                        <option value="en_maintenance">En maintenance</option>
+                    </select>
+                </div>
+                <button id="add-radio-btn" class="action-btn">Ajouter une radio</button>
+            </div>
+
+            <div class="data-preview">
+                <div class="view-controls">
+                    <button id="toggle-view" class="view-switch">Vue carte</button>
+                </div>
+                <div id="table-container" class="table-responsive mobile-friendly">
+                    <table id="radios-table">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Marque</th>
+                                <th>Modèle</th>
+                                <th>Numéro de série</th>
+                                <th>Géolocalisable</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="radios-body">
+                            <!-- Ce tableau sera rempli par JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination">
+                    <button id="prev-page" class="action-btn" disabled>Précédent</button>
+                    <span id="page-info">Page 1</span>
+                    <button id="next-page" class="action-btn">Suivant</button>
+                </div>
+            </div>
+            
+
+            <!-- Modal pour ajouter/modifier une radio -->
+            <div id="radio-modal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h2 id="modal-title">Ajouter une radio</h2>
+                    <form id="radio-form">
+                        <input type="hidden" id="radio-id">
+                        <div class="form-group">
+                            <label for="marque">Marque:</label>
+                            <input type="text" id="marque" name="marque" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="modele">Modèle:</label>
+                            <input type="text" id="modele" name="modele" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="numero-serie">Numéro de série:</label>
+                            <input type="text" id="numero-serie" name="numero_serie" required>
+                        </div>
+                        <div class="form-group checkbox-group">
+                            <label>
+                                <input type="checkbox" id="geolocalisable" name="est_geolocalisable">
+                                Radio géolocalisable
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" id="submit-radio" class="action-btn">Enregistrer</button>
+                            <button type="button" id="cancel-radio" class="cancel-btn">Annuler</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Modal pour mettre en maintenance -->
+            <div id="maintenance-modal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h2>Mettre en maintenance</h2>
+                    <form id="maintenance-form">
+                        <input type="hidden" id="maintenance-radio-id">
+                        <div class="form-group">
+                            <label for="description">Description du problème:</label>
+                            <textarea id="description" name="description" rows="3" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="operateur">Opérateur:</label>
+                            <input type="text" id="operateur" name="operateur" required>
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" id="submit-maintenance" class="action-btn">Enregistrer</button>
+                            <button type="button" id="cancel-maintenance" class="cancel-btn">Annuler</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Modal de confirmation de suppression -->
+            <div id="confirm-delete-modal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h2>Confirmer la suppression</h2>
+                    <p>Êtes-vous sûr de vouloir supprimer cette radio?</p>
+                    <p>Cette action est irréversible.</p>
+                    <div class="form-group">
+                        <button id="confirm-delete" class="action-btn" style="background-color: #dc3545;">Supprimer</button>
+                        <button id="cancel-delete" class="cancel-btn">Annuler</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal pour voir l'historique des maintenances -->
+            <div id="maintenance-history-modal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h2>Historique des maintenances</h2>
+                    <div class="table-responsive">
+                        <table id="maintenance-history-table">
+                            <thead>
+                                <tr>
+                                    <th>Date de début</th>
+                                    <th>Date de fin</th>
+                                    <th>Description</th>
+                                    <th>Opérateur</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="maintenance-history-body">
+                                <!-- Ce tableau sera rempli par JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="form-group" style="margin-top: 20px;">
+                        <button id="close-maintenance-history" class="cancel-btn">Fermer</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <footer class="app-footer">
+        <p>&copy; 2025 SNSM - Système de gestion des radios</p>
+    </footer>
+
+    <script src="{{ url_for('static', path='/js/radio.js') }}"></script>
+</body>
+</html>

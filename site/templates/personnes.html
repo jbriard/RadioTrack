@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Radios SNSM - Gestion des Personnes</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/styles.css') }}">
+    <link rel="icon" href="{{ url_for('static', path='/images/favicon.png') }}" type="image/png" />
+</head>
+<body>
+    <header class="app-header">
+        <div class="logo">
+            <img src="{{ url_for('static', path='/images/Les_Sauveteurs_en_Mer.webp') }}" alt="Logo SNSM">
+            <span>Gestion des Radios</span>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="/dashboard">Tableau de bord</a></li>
+                <li><a href="/radios">Radios</a></li>
+                <li><a href="/personnes" class="active">Personnes</a></li>
+                <li><a href="/equipes">Équipes</a></li>
+            </ul>
+        </nav>
+        <div class="user-menu">
+            <span>{{ user.username }}</span>
+            <a href="/logout" class="logout-btn">Déconnexion</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar">
+            <nav>
+                <ul>
+                    <li><a href="/dashboard">Tableau de bord</a></li>
+                    <li><a href="/radios">Gestion des radios</a></li>
+                    <li><a href="/prets">Prêt/Retour</a></li>
+                    <li><a href="/personnes" class="active">Gestion des personnes</a></li>
+                    <li><a href="/equipes">Gestion des équipes</a></li>
+                    <li><a href="/cfis">Gestion des CFI</a></li>
+                    <li><a href="/historique">Historique des prêts</a></li>
+                    <li><a href="/maintenance">Maintenance</a></li>
+                    <li><a href="/etiquettes">Impression d'étiquettes</a></li>
+                    <li><a href="/sauvegardes">Sauvegardes</a></li>
+                    <li><a href="/parametres">Paramètres</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <h1>Gestion des Personnes</h1>
+
+            <div class="controls">
+                <div class="search-container">
+                    <input type="text" id="search-personne" placeholder="Rechercher une personne...">
+                    <button id="search-btn" class="action-btn">Rechercher</button>
+                </div>
+                <div class="filter-container">
+                    <select id="filter-equipe">
+                        <option value="">Toutes les équipes</option>
+                        <!-- Options seront chargées par JavaScript -->
+                    </select>
+                </div>
+                <button id="add-personne-btn" class="action-btn">Ajouter une personne</button>
+            </div>
+
+            <div class="data-preview">
+                <div class="view-controls">
+                    <button id="toggle-view" class="view-switch">Vue carte</button>
+                </div>
+                <div id="table-container" class="table-responsive mobile-friendly">
+                    <table id="personnes-table">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Nom</th>
+                                <th>Prénom</th>
+                                <th>Équipe</th>
+                                <th>CFI</th>
+                                <th>Date de création</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="personnes-body">
+                            <!-- Ce tableau sera rempli par JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination">
+                    <button id="prev-page" class="action-btn" disabled>Précédent</button>
+                    <span id="page-info">Page 1</span>
+                    <button id="next-page" class="action-btn">Suivant</button>
+                </div>
+            </div>
+
+            <!-- Modal pour ajouter/modifier une personne -->
+            <div id="personne-modal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h2 id="modal-title">Ajouter une personne</h2>
+                    <form id="personne-form">
+                        <input type="hidden" id="personne-id">
+                        <div class="form-group">
+                            <label for="nom">Nom:</label>
+                            <input type="text" id="nom" name="nom" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="prenom">Prénom:</label>
+                            <input type="text" id="prenom" name="prenom" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="equipe">Équipe (optionnelle):</label>
+                            <select id="equipe" name="id_equipe">
+                                <option value="">Aucune équipe</option>
+                                <!-- Options seront chargées par JavaScript -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="cfi">CFI (optionnel):</label>
+                            <select id="cfi" name="id_cfi">
+                                <option value="">Aucun</option>
+                                <!-- Options seront chargées par JavaScript -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" id="submit-personne" class="action-btn">Enregistrer</button>
+                            <button type="button" id="cancel-personne" class="cancel-btn">Annuler</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Modal de confirmation de suppression -->
+            <div id="confirm-delete-modal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h2>Confirmer la suppression</h2>
+                    <p>Êtes-vous sûr de vouloir supprimer cette personne?</p>
+                    <p>Cette action est irréversible.</p>
+                    <div class="form-group">
+                        <button id="confirm-delete" class="action-btn" style="background-color: #dc3545;">Supprimer</button>
+                        <button id="cancel-delete" class="cancel-btn">Annuler</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal pour voir l'historique des prêts -->
+            <div id="prets-history-modal" class="modal" style="display: none;">
+                <div class="modal-content" style="max-width: 800px;">
+                    <span class="close">&times;</span>
+                    <h2>Historique des prêts de <span id="personne-name"></span></h2>
+                    
+                    <div class="table-responsive">
+                        <table id="prets-history-table">
+                            <thead>
+                                <tr>
+                                    <th>Radio</th>
+                                    <th>Date d'emprunt</th>
+                                    <th>Date de retour</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody id="prets-history-body">
+                                <!-- Ce tableau sera rempli par JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="form-group" style="margin-top: 20px; text-align: right;">
+                        <button id="close-prets-history" class="cancel-btn">Fermer</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <footer class="app-footer">
+        <p>&copy; 2025 SNSM - Système de gestion des radios</p>
+    </footer>
+
+    <script src="{{ url_for('static', path='/js/personne.js') }}"></script>
+</body>
+</html>
