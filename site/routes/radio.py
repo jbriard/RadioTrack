@@ -14,7 +14,6 @@ class RadioBase(BaseModel):
     modele: str
     numero_serie: str
     est_geolocalisable: bool = False
-    accessoires: str = "aucun"
 
 class RadioCreate(RadioBase):
     pass
@@ -24,7 +23,6 @@ class RadioUpdate(RadioBase):
     modele: Optional[str] = None
     numero_serie: Optional[str] = None
     est_geolocalisable: Optional[bool] = None
-    accessoires: Optional[str] = None
 
 class MaintenanceCreate(BaseModel):
     description: str
@@ -161,13 +159,6 @@ async def create_radio(
     """
     Créer une nouvelle radio
     """
-    # Valider les accessoires
-    valid_accessoires = ['oreillettes', 'micro', 'les deux', 'aucun']
-    if radio_data.accessoires not in valid_accessoires:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Les accessoires doivent être l'un des suivants: {', '.join(valid_accessoires)}"
-        )
     
     # Créer la nouvelle radio
     new_radio = Radio(
@@ -175,7 +166,6 @@ async def create_radio(
         modele=radio_data.modele,
         numero_serie=radio_data.numero_serie,
         est_geolocalisable=radio_data.est_geolocalisable,
-        accessoires=radio_data.accessoires,
         code_barre=None  # Sera généré automatiquement par le trigger
     )
     
@@ -215,13 +205,6 @@ async def update_radio(
     # Mettre à jour les champs fournis
     update_data = radio_data.dict(exclude_unset=True)
     
-    if "accessoires" in update_data:
-        valid_accessoires = ['oreillettes', 'micro', 'les deux', 'aucun']
-        if update_data["accessoires"] not in valid_accessoires:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Les accessoires doivent être l'un des suivants: {', '.join(valid_accessoires)}"
-            )
     
     for key, value in update_data.items():
         setattr(radio, key, value)
@@ -340,7 +323,7 @@ async def end_maintenance(
         )
     
     # Mettre à jour la date de fin
-    maintenance.date_fin = datetime.utcnow()
+    maintenance.date_fin = datetime.now()
     
     # Vérifier s'il y a d'autres maintenances actives pour cette radio
     other_active_maintenance = db.query(Maintenance).filter(

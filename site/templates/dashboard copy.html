@@ -158,10 +158,6 @@
             margin: 5px 0;
             cursor: pointer;
             width: 100%;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-            box-sizing: border-box;
         }
         
         .action-btn:hover {
@@ -324,7 +320,8 @@
                     <li><a href="/maintenance">Maintenance</a></li>
                     <li><a href="/etiquettes">Impression d'étiquettes</a></li>
                     <li><a href="/export">Export CSV</a></li>
-
+                    <li><a href="/sauvegardes">Sauvegardes</a></li>
+                    <li><a href="/parametres">Paramètres</a></li>
                 </ul>
             </nav>
         </aside>
@@ -335,18 +332,25 @@
             <div class="dashboard-cards">
                 <div class="card">
                     <h2>État du parc</h2>
-                    <p>Nombre total de radios: <strong id="total-radios">Chargement...</strong></p>
-                    <p>Radios en prêt: <strong><span id="loaned-radios" class="badge">Chargement...</span></strong></p>
-                    <p>Radios en maintenance: <strong><span id="maintenance-radios" class="badge">Chargement...</span></strong></p>
-                    <p>Radios disponibles: <strong id="available-radios">Chargement...</strong></p>
+                    <p>Nombre total de radios: <strong>70</strong></p>
+                    <p>Radios en prêt: <strong><span class="badge">12</span></strong></p>
+                    <p>Radios en maintenance: <strong><span class="badge">3</span></strong></p>
+                    <p>Radios disponibles: <strong>55</strong></p>
                 </div>
 
                 <div class="card">
                     <h2>Actions rapides</h2>
-                    <a href="/radios" class="action-btn">Gestion des radios</a>
-                    <a href="/prets" class="action-btn">Prêt/Retour de radio</a>
-                    <a href="/personnes" class="action-btn">Gestion des personnes</a>
-                    <a href="/maintenance" class="action-btn">Maintenance</a>
+                    <button class="action-btn">Nouvelle radio</button>
+                    <button class="action-btn">Prêt de radio</button>
+                    <button class="action-btn">Retour de radio</button>
+                    <button class="action-btn">Signaler maintenance</button>
+                </div>
+
+                <div class="card">
+                    <h2>Statistiques</h2>
+                    <p>Nombre d'équipes actives: <strong>25</strong></p>
+                    <p>Radios géolocalisables: <strong>35</strong></p>
+                    <p>Radios avec oreillettes: <strong>45</strong></p>
                 </div>
             </div>
 
@@ -373,7 +377,36 @@
                             </tr>
                         </thead>
                         <tbody id="data-body">
-                            <!-- Ce tableau sera rempli dynamiquement par JavaScript -->
+                            <tr>
+                                <td>RAD-00001</td>
+                                <td>Kenwood TK-3601D</td>
+                                <td>Martin D.</td>
+                                <td>Équipe de secours 3</td>
+                                <td>16/04/2025 09:15</td>
+                                <td>
+                                    <button class="action-btn" style="width: auto; padding: 3px 8px; font-size: 12px;">Retour</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>RAD-00012</td>
+                                <td>Motorola XT420</td>
+                                <td>Sophie L.</td>
+                                <td>Direction</td>
+                                <td>16/04/2025 08:30</td>
+                                <td>
+                                    <button class="action-btn" style="width: auto; padding: 3px 8px; font-size: 12px;">Retour</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>RAD-00023</td>
+                                <td>Kenwood TK-3601D</td>
+                                <td>Philippe M.</td>
+                                <td>Logistique 1</td>
+                                <td>16/04/2025 10:20</td>
+                                <td>
+                                    <button class="action-btn" style="width: auto; padding: 3px 8px; font-size: 12px;">Retour</button>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -398,7 +431,24 @@
                             </tr>
                         </thead>
                         <tbody id="maintenance-body">
-                            <!-- Ce tableau sera rempli dynamiquement par JavaScript -->
+                            <tr>
+                                <td>RAD-00007</td>
+                                <td>Motorola XT420</td>
+                                <td>Problème de batterie</td>
+                                <td>15/04/2025</td>
+                                <td>
+                                    <button class="action-btn" style="width: auto; padding: 3px 8px; font-size: 12px;">Fin maintenance</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>RAD-00018</td>
+                                <td>Kenwood TK-3601D</td>
+                                <td>Problème de micro</td>
+                                <td>14/04/2025</td>
+                                <td>
+                                    <button class="action-btn" style="width: auto; padding: 3px 8px; font-size: 12px;">Fin maintenance</button>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -436,6 +486,6 @@
         <p>&copy; 2025 SNSM - Système de gestion des radios</p>
     </footer>
 
-    <script src="{{ url_for('static', path='/js/dashboard.js') }}"></script>
+    <script src="{{ url_for('static', path='/js/main.js') }}"></script>
 </body>
 </html>

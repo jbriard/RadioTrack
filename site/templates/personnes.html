@@ -19,6 +19,7 @@
                 <li><a href="/radios">Radios</a></li>
                 <li><a href="/personnes" class="active">Personnes</a></li>
                 <li><a href="/equipes">Équipes</a></li>
+                <li><a href="/cfis">CFI</a></li>
             </ul>
         </nav>
         <div class="user-menu">
@@ -40,8 +41,7 @@
                     <li><a href="/historique">Historique des prêts</a></li>
                     <li><a href="/maintenance">Maintenance</a></li>
                     <li><a href="/etiquettes">Impression d'étiquettes</a></li>
-                    <li><a href="/sauvegardes">Sauvegardes</a></li>
-                    <li><a href="/parametres">Paramètres</a></li>
+                    <li><a href="/export">Export CSV</a></li>
                 </ul>
             </nav>
         </aside>
@@ -57,6 +57,10 @@
                 <div class="filter-container">
                     <select id="filter-equipe">
                         <option value="">Toutes les équipes</option>
+                        <!-- Options seront chargées par JavaScript -->
+                    </select>
+                    <select id="filter-cfi">
+                        <option value="">Tous les CFIs</option>
                         <!-- Options seront chargées par JavaScript -->
                     </select>
                 </div>

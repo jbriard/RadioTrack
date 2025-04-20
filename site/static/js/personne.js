@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentPersonneId = null;
     let deletePersonneId = null;
     let equipesCache = {}; // Cache pour stocker les équipes
+    let cfisCache = {};    // Cache pour stocker les CFIs
     
     // Éléments DOM
     const personnesTable = document.getElementById('personnes-table');
@@ -13,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('search-personne');
     const searchBtn = document.getElementById('search-btn');
     const filterEquipe = document.getElementById('filter-equipe');
+    const filterCFI = document.getElementById('filter-cfi');  // Nouvel élément pour filtrer par CFI
     const addPersonneBtn = document.getElementById('add-personne-btn');
     const prevPageBtn = document.getElementById('prev-page');
     const nextPageBtn = document.getElementById('next-page');
@@ -40,7 +42,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Boutons de confirmation
     document.getElementById('confirm-delete').addEventListener('click', deletePersonne);
     
-    // Initialisation - Charger les équipes d'abord, puis les personnes
+    // Initialisation - Charger les équipes et CFIs d'abord, puis les personnes
     initData();
     
     // Écouteurs d'événements
@@ -53,6 +55,13 @@ document.addEventListener('DOMContentLoaded', function() {
         currentPage = 1;
         loadPersonnes();
     });
+    // Écouteur pour le filtre CFI s'il existe
+    if (filterCFI) {
+        filterCFI.addEventListener('change', () => {
+            currentPage = 1;
+            loadPersonnes();
+        });
+    }
     prevPageBtn.addEventListener('click', () => {
         if (currentPage > 1) {
             currentPage--;
@@ -109,6 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const searchTerm = searchInput.value;
             const equipeFilter = filterEquipe.value;
+            const cfiFilter = filterCFI ? filterCFI.value : '';
             const skip = (currentPage - 1) * pageSize;
             
             let url = `/api/personnes?skip=${skip}&limit=${pageSize}`;
@@ -119,6 +129,10 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (equipeFilter) {
                 url += `&equipe_id=${encodeURIComponent(equipeFilter)}`;
+            }
+            
+            if (cfiFilter) {
+                url += `&cfi_id=${encodeURIComponent(cfiFilter)}`;
             }
             
             const response = await fetch(url);
@@ -162,25 +176,31 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Mettre à jour le select de filtre
             const filterEquipeSelect = document.getElementById('filter-equipe');
-            filterEquipeSelect.innerHTML = '<option value="">Toutes les équipes</option>';
+            if (filterEquipeSelect) {
+                filterEquipeSelect.innerHTML = '<option value="">Toutes les équipes</option>';
+                
+                equipes.forEach(equipe => {
+                    // Ajouter l'option au filtre
+                    const filterOption = document.createElement('option');
+                    filterOption.value = equipe.id;
+                    filterOption.textContent = `${equipe.nom} (${formatCategorie(equipe.categorie)})`;
+                    filterEquipeSelect.appendChild(filterOption);
+                });
+            }
             
             // Mettre à jour le select du formulaire
             const equipeSelect = document.getElementById('equipe');
-            equipeSelect.innerHTML = '<option value="">Aucune équipe</option>'; // Ajouter cette option pour permettre aucune équipe
-            
-            equipes.forEach(equipe => {
-                // Ajouter l'option au filtre
-                const filterOption = document.createElement('option');
-                filterOption.value = equipe.id;
-                filterOption.textContent = `${equipe.nom} (${formatCategorie(equipe.categorie)})`;
-                filterEquipeSelect.appendChild(filterOption);
+            if (equipeSelect) {
+                equipeSelect.innerHTML = '<option value="">Aucune équipe</option>'; // Option pour permettre aucune équipe
                 
-                // Ajouter l'option au formulaire
-                const formOption = document.createElement('option');
-                formOption.value = equipe.id;
-                formOption.textContent = `${equipe.nom} (${formatCategorie(equipe.categorie)})`;
-                equipeSelect.appendChild(formOption);
-            });
+                equipes.forEach(equipe => {
+                    // Ajouter l'option au formulaire
+                    const formOption = document.createElement('option');
+                    formOption.value = equipe.id;
+                    formOption.textContent = `${equipe.nom} (${formatCategorie(equipe.categorie)})`;
+                    equipeSelect.appendChild(formOption);
+                });
+            }
             
         } catch (error) {
             console.error('Erreur:', error);
@@ -188,33 +208,53 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Charger les CFIs pour le formulaire
+    // Charger les CFIs pour le filtre, le formulaire et le cache
     async function loadCFIs() {
         try {
             const response = await fetch('/api/cfis?limit=100');
             
             if (!response.ok) {
-                // Si l'API pour les CFIs n'existe pas encore, ce n'est pas critique
-                console.warn('API pour les CFIs non disponible');
-                return;
+                throw new Error('Erreur lors du chargement des CFIs');
             }
             
             const cfis = await response.json();
             
-            // Mettre à jour le select du formulaire
-            const cfiSelect = document.getElementById('cfi');
-            cfiSelect.innerHTML = '<option value="">Aucun</option>';
-            
+            // Créer un cache des CFIs pour référence rapide
+            cfisCache = {};
             cfis.forEach(cfi => {
-                const option = document.createElement('option');
-                option.value = cfi.id;
-                option.textContent = cfi.nom;
-                cfiSelect.appendChild(option);
+                cfisCache[cfi.id] = cfi;
             });
             
+            // Mettre à jour le select de filtre s'il existe
+            const filterCFISelect = document.getElementById('filter-cfi');
+            if (filterCFISelect) {
+                filterCFISelect.innerHTML = '<option value="">Tous les CFIs</option>';
+                
+                cfis.forEach(cfi => {
+                    // Ajouter l'option au filtre
+                    const filterOption = document.createElement('option');
+                    filterOption.value = cfi.id;
+                    filterOption.textContent = cfi.nom;
+                    filterCFISelect.appendChild(filterOption);
+                });
+            }
+            
+            // Mettre à jour le select du formulaire
+            const cfiSelect = document.getElementById('cfi');
+            if (cfiSelect) {
+                cfiSelect.innerHTML = '<option value="">Aucun CFI</option>';
+                
+                cfis.forEach(cfi => {
+                    const option = document.createElement('option');
+                    option.value = cfi.id;
+                    option.textContent = cfi.nom;
+                    cfiSelect.appendChild(option);
+                });
+            }
+            
         } catch (error) {
-            console.warn('Erreur lors du chargement des CFIs:', error);
-            // Ce n'est pas critique pour le fonctionnement, donc juste un warning
+            console.error('Erreur lors du chargement des CFIs:', error);
+            showMessage('Erreur lors du chargement des CFIs', 'error');
         }
     }
     
@@ -235,17 +275,25 @@ document.addEventListener('DOMContentLoaded', function() {
             // Formatage de la date
             const dateCreation = new Date(personne.date_creation).toLocaleDateString('fr-FR');
             
-            // Récupérer le nom de l'équipe depuis le cache
-            let equipeName = 'Aucune équipe';  // Modification ici : "Non assigné" devient "Aucune équipe"
-            if (personne.id_equipe && equipesCache[personne.id_equipe]) {
-                equipeName = equipesCache[personne.id_equipe].nom;
-            } else if (personne.equipe && personne.equipe.nom) {
-                // Fallback si l'équipe est incluse dans la réponse API
-                equipeName = personne.equipe.nom;
+            // Récupérer le nom de l'équipe
+            let equipeName = 'Aucune équipe';
+            if (personne.id_equipe) {
+                if (equipesCache[personne.id_equipe]) {
+                    equipeName = equipesCache[personne.id_equipe].nom;
+                } else if (personne.equipe && personne.equipe.nom) {
+                    equipeName = personne.equipe.nom;
+                }
             }
             
             // Récupérer le nom du CFI
-            const cfiName = personne.cfi ? personne.cfi.nom : '-';
+            let cfiName = '-';
+            if (personne.id_cfi) {
+                if (cfisCache[personne.id_cfi]) {
+                    cfiName = cfisCache[personne.id_cfi].nom;
+                } else if (personne.cfi && personne.cfi.nom) {
+                    cfiName = personne.cfi.nom;
+                }
+            }
             
             row.innerHTML = `
                 <td>${personne.code_barre}</td>
@@ -376,7 +424,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('nom').value = personne.nom;
             document.getElementById('prenom').value = personne.prenom;
             document.getElementById('equipe').value = personne.id_equipe || ''; // Utiliser une chaîne vide si id_equipe est null
-            document.getElementById('cfi').value = personne.id_cfi || '';
+            document.getElementById('cfi').value = personne.id_cfi || '';       // Utiliser une chaîne vide si id_cfi est null
             
             currentPersonneId = personne.id;
             personneModal.style.display = 'flex';
@@ -453,12 +501,13 @@ document.addEventListener('DOMContentLoaded', function() {
         
         try {
             const equipeValue = document.getElementById('equipe').value;
+            const cfiValue = document.getElementById('cfi').value;
             
             const formData = {
                 nom: document.getElementById('nom').value,
                 prenom: document.getElementById('prenom').value,
-                id_equipe: equipeValue === "" ? null : parseInt(equipeValue), // Important: convertir chaîne vide en null
-                id_cfi: document.getElementById('cfi').value ? parseInt(document.getElementById('cfi').value) : null
+                id_equipe: equipeValue === "" ? null : parseInt(equipeValue), // Convertir chaîne vide en null
+                id_cfi: cfiValue === "" ? null : parseInt(cfiValue)           // Convertir chaîne vide en null
             };
             
             let response;

@@ -203,7 +203,7 @@ async def create_pret(
         id_personne=pret_data.id_personne,
         accessoires=pret_data.accessoires,
         commentaire=pret_data.commentaire,
-        date_emprunt=datetime.utcnow(),
+        date_emprunt=datetime.now(),
         date_retour=None
     )
     
@@ -239,7 +239,7 @@ async def return_radio(
         )
     
     # Mettre à jour la date de retour
-    pret.date_retour = datetime.utcnow()
+    pret.date_retour = datetime.now()
     
     # Mettre à jour le commentaire si fourni
     if pret_update and pret_update.commentaire is not None:

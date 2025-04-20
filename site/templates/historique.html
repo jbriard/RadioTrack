@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Radios SNSM - Historique des prêts</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/styles.css') }}">
+    <link rel="icon" href="{{ url_for('static', path='/images/favicon.png') }}" type="image/png" />
+    <style>
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stat-card h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+            font-size: 1rem;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 10px 0;
+        }
+        
+        .filter-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .filter-group {
+            margin-bottom: 15px;
+        }
+        
+        .filter-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .date-range {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .date-range input {
+            flex: 1;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .status-active {
+            background-color: #e6f4ea;
+            color: #137333;
+        }
+        
+        .status-returned {
+            background-color: #e8f0fe;
+            color: #1a73e8;
+        }
+        
+        .status-overdue {
+            background-color: #fce8e6;
+            color: #c5221f;
+        }
+        
+        .duration-cell {
+            white-space: nowrap;
+        }
+        
+        .chart-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 15px;
+        }
+        
+        .tab {
+            padding: 8px 16px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+        
+        .tab.active {
+            border-bottom: 2px solid var(--primary-color);
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @media (max-width: 768px) {
+            .filter-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .date-range {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="app-header">
+        <div class="logo">
+            <img src="{{ url_for('static', path='/images/Les_Sauveteurs_en_Mer.webp') }}" alt="Logo SNSM">
+            <span>Gestion des Radios</span>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="/dashboard">Tableau de bord</a></li>
+                <li><a href="/radios">Radios</a></li>
+                <li><a href="/personnes">Personnes</a></li>
+                <li><a href="/equipes">Équipes</a></li>
+            </ul>
+        </nav>
+        <div class="user-menu">
+            <span>{{ user.username }}</span>
+            <a href="/logout" class="logout-btn">Déconnexion</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar">
+            <nav>
+                <ul>
+                    <li><a href="/dashboard">Tableau de bord</a></li>
+                    <li><a href="/radios">Gestion des radios</a></li>
+                    <li><a href="/prets">Prêt/Retour</a></li>
+                    <li><a href="/personnes">Gestion des personnes</a></li>
+                    <li><a href="/equipes">Gestion des équipes</a></li>
+                    <li><a href="/cfis">Gestion des CFI</a></li>
+                    <li><a href="/historique" class="active">Historique des prêts</a></li>
+                    <li><a href="/maintenance">Maintenance</a></li>
+                    <li><a href="/etiquettes">Impression d'étiquettes</a></li>
+                    <li><a href="/export">Export CSV</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <h1>Historique des prêts</h1>
+            
+            <!-- Statistiques -->
+            <div class="stats-container">
+                <div class="stat-card">
+                    <h3>Nombre total de prêts</h3>
+                    <div class="stat-value" id="total-prets">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Prêts actifs</h3>
+                    <div class="stat-value" id="prets-actifs">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Durée moyenne</h3>
+                    <div class="stat-value" id="duree-moyenne">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Prêts de longue durée</h3>
+                    <div class="stat-value" id="prets-long-terme">-</div>
+                </div>
+            </div>
+            
+            <!-- Onglets pour différentes vues -->
+            <div class="tabs">
+                <div class="tab active" data-tab="liste">Liste des prêts</div>
+                <div class="tab" data-tab="graphiques">Graphiques</div>
+                <div class="tab" data-tab="top">Top radios & emprunteurs</div>
+            </div>
+            
+            <!-- Contenu de l'onglet Liste des prêts -->
+            <div class="tab-content active" id="tab-liste">
+                <!-- Filtres avancés -->
+                <div class="card">
+                    <h2>Filtres avancés</h2>
+                    <div class="filter-container">
+                        <div class="filter-group">
+                            <label for="search-global">Recherche globale:</label>
+                            <input type="text" id="search-global" placeholder="Rechercher...">
+                        </div>
+                        <div class="filter-group">
+                            <label for="filter-status">Statut:</label>
+                            <select id="filter-status">
+                                <option value="">Tous</option>
+                                <option value="active">Actif</option>
+                                <option value="returned">Retourné</option>
+                                <option value="overdue">En retard</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="filter-radio">Radio:</label>
+                            <select id="filter-radio">
+                                <option value="">Toutes</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="filter-personne">Personne:</label>
+                            <select id="filter-personne">
+                                <option value="">Toutes</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="filter-equipe">Équipe:</label>
+                            <select id="filter-equipe">
+                                <option value="">Toutes</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="filter-cfi">CFI:</label>
+                            <select id="filter-cfi">
+                                <option value="">Tous</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="filter-accessoires">Accessoires:</label>
+                            <select id="filter-accessoires">
+                                <option value="">Tous</option>
+                                <option value="aucun">Aucun</option>
+                                <option value="oreillettes">Oreillettes</option>
+                                <option value="micro">Micro</option>
+                                <option value="les deux">Les deux</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="filter-group">
+                        <label>Période:</label>
+                        <div class="date-range">
+                            <input type="date" id="date-debut" placeholder="Date de début">
+                            <input type="date" id="date-fin" placeholder="Date de fin">
+                        </div>
+                    </div>
+                    <div style="margin-top: 10px; display: flex; gap: 10px;">
+                        <button id="apply-filters" class="action-btn">Appliquer les filtres</button>
+                        <button id="reset-filters" class="cancel-btn">Réinitialiser</button>
+                        <button id="export-csv" class="action-btn" style="margin-left: auto;">Exporter CSV</button>
+                    </div>
+                </div>
+
+                <!-- Liste des prêts -->
+                <div class="data-preview">
+                    <div class="view-controls">
+                        <button id="toggle-view" class="view-switch">Vue carte</button>
+                        <select id="items-per-page" style="margin-left: 10px;">
+                            <option value="10">10 par page</option>
+                            <option value="25">25 par page</option>
+                            <option value="50">50 par page</option>
+                            <option value="100">100 par page</option>
+                        </select>
+                    </div>
+                    <div id="table-container" class="table-responsive mobile-friendly">
+                        <table id="historique-table">
+                            <thead>
+                                <tr>
+                                    <th>Radio</th>
+                                    <th>Modèle</th>
+                                    <th>Emprunteur</th>
+                                    <th>Équipe/CFI</th>
+                                    <th>Date d'emprunt</th>
+                                    <th>Date de retour</th>
+                                    <th>Durée</th>
+                                    <th>Accessoires</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historique-body">
+                                <!-- Ce tableau sera rempli par JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination">
+                        <button id="prev-page" class="action-btn" disabled>Précédent</button>
+                        <span id="page-info">Page 1</span>
+                        <button id="next-page" class="action-btn">Suivant</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contenu de l'onglet Graphiques -->
+            <div class="tab-content" id="tab-graphiques">
+                <div class="chart-container">
+                    <h2>Activité de prêt par période</h2>
+                    <div class="filter-group">
+                        <label for="graph-period">Période:</label>
+                        <select id="graph-period">
+                            <option value="day">Par jour</option>
+                            <option value="week">Par semaine</option>
+                            <option value="month" selected>Par mois</option>
+                        </select>
+                    </div>
+                    <div id="activity-chart" style="width: 100%; height: 400px;"></div>
+                </div>
+                
+                <div class="chart-container">
+                    <h2>Durée moyenne des prêts par équipe</h2>
+                    <div id="duration-chart" style="width: 100%; height: 400px;"></div>
+                </div>
+            </div>
+            
+            <!-- Contenu de l'onglet Top radios & emprunteurs -->
+            <div class="tab-content" id="tab-top">
+                <div class="charts-container" style="display: flex; flex-wrap: wrap; gap: 20px;">
+                    <div class="chart-container" style="flex: 1; min-width: 300px;">
+                        <h2>Top 10 des radios les plus empruntées</h2>
+                        <div id="top-radios-chart" style="width: 100%; height: 400px;"></div>
+                    </div>
+                    
+                    <div class="chart-container" style="flex: 1; min-width: 300px;">
+                        <h2>Top 10 des emprunteurs les plus actifs</h2>
+                        <div id="top-emprunteurs-chart" style="width: 100%; height: 400px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de détails d'un prêt -->
+            <div id="pret-details-modal" class="modal" style="display: none;">
+                <div class="modal-content" style="max-width: 800px;">
+                    <span class="close">&times;</span>
+                    <h2>Détails du prêt</h2>
+                    <div id="pret-details-content">
+                        <!-- Sera rempli dynamiquement -->
+                    </div>
+                    <div class="form-group" style="margin-top: 20px; text-align: right;">
+                        <button id="close-pret-details" class="cancel-btn">Fermer</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal pour ajouter un commentaire -->
+            <div id="add-comment-modal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h2>Ajouter un commentaire</h2>
+                    <form id="comment-form">
+                        <input type="hidden" id="comment-pret-id">
+                        <div class="form-group">
+                            <label for="commentaire">Commentaire:</label>
+                            <textarea id="commentaire" name="commentaire" rows="3" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" class="action-btn">Enregistrer</button>
+                            <button type="button" id="cancel-comment" class="cancel-btn">Annuler</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Modal de confirmation de retour -->
+            <div id="confirm-return-modal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h2>Confirmer le retour</h2>
+                    <p>Êtes-vous sûr de vouloir enregistrer le retour de cette radio?</p>
+                    <input type="hidden" id="return-pret-id">
+                    <div class="form-group">
+                        <label for="return-commentaire">Commentaire (optionnel):</label>
+                        <textarea id="return-commentaire" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <button id="confirm-return-btn" class="action-btn">Confirmer le retour</button>
+                        <button id="cancel-return" class="cancel-btn">Annuler</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <footer class="app-footer">
+        <p>&copy; 2025 SNSM - Système de gestion des radios</p>
+    </footer>
+
+    <script src="{{ url_for('static', path='/js/historique.js') }}"></script>
+</body>
+</html>

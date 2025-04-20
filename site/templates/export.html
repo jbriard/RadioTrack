@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Radios SNSM - Export CSV</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/styles.css') }}">
+    <link rel="icon" href="{{ url_for('static', path='/images/favicon.png') }}" type="image/png" />
+    <style>
+        .export-preview {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            overflow-x: auto; /* Permet le défilement horizontal si nécessaire */
+        }
+        
+        .export-preview h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+        
+        .card {
+            margin-bottom: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+        
+        #users-count, #radios-count {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 10px;
+        }
+        
+        .table-responsive {
+            overflow-x: auto;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border: 1px solid #eee;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px; /* Largeur minimale pour éviter une compression excessive */
+        }
+        
+        table th, table td {
+            padding: 10px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        table th {
+            background-color: var(--primary-color);
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+        
+        table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        
+        .dashboard-cards {
+            display: block; /* Change from grid to block for better spacing */
+        }
+        
+        /* Espace entre les sections */
+        .card + .card {
+            margin-top: 40px;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .card {
+                padding: 15px;
+            }
+            
+            table th, table td {
+                padding: 8px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="app-header">
+        <div class="logo">
+            <img src="{{ url_for('static', path='/images/Les_Sauveteurs_en_Mer.webp') }}" alt="Logo SNSM">
+            <span>Gestion des Radios</span>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="/dashboard">Tableau de bord</a></li>
+                <li><a href="/radios">Radios</a></li>
+                <li><a href="/personnes">Personnes</a></li>
+                <li><a href="/equipes">Équipes</a></li>
+            </ul>
+        </nav>
+        <div class="user-menu">
+            <span>{{ user.username }}</span>
+            <a href="/logout" class="logout-btn">Déconnexion</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar">
+            <nav>
+                <ul>
+                    <li><a href="/dashboard">Tableau de bord</a></li>
+                    <li><a href="/radios">Gestion des radios</a></li>
+                    <li><a href="/prets">Prêt/Retour</a></li>
+                    <li><a href="/personnes">Gestion des personnes</a></li>
+                    <li><a href="/equipes">Gestion des équipes</a></li>
+                    <li><a href="/cfis">Gestion des CFI</a></li>
+                    <li><a href="/historique">Historique des prêts</a></li>
+                    <li><a href="/maintenance">Maintenance</a></li>
+                    <li><a href="/etiquettes">Impression d'étiquettes</a></li>
+                    <li><a href="/export" class="active">Export CSV</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <h1>Export CSV</h1>
+
+            <div class="dashboard-cards">
+                <div class="card">
+                    <h2>Export des utilisateurs</h2>
+                    <p>Téléchargez la liste complète des utilisateurs au format CSV.</p>
+                    <div class="form-group">
+                        <label for="users-options">Options d'export :</label>
+                        <select id="users-options" class="form-control">
+                            <option value="all">Tous les utilisateurs</option>
+                            <option value="equipe">Par équipe</option>
+                            <option value="cfi">Par CFI</option>
+                        </select>
+                    </div>
+                    <div id="users-filter-equipe" class="form-group" style="display: none;">
+                        <label for="users-equipe">Équipe :</label>
+                        <select id="users-equipe" class="form-control">
+                            <!-- Options seront chargées par JavaScript -->
+                        </select>
+                    </div>
+                    <div id="users-filter-cfi" class="form-group" style="display: none;">
+                        <label for="users-cfi">CFI :</label>
+                        <select id="users-cfi" class="form-control">
+                            <!-- Options seront chargées par JavaScript -->
+                        </select>
+                    </div>
+                    <button id="export-users-btn" class="action-btn">Exporter les utilisateurs</button>
+                    <div class="export-preview">
+                        <h3>Aperçu des données</h3>
+                        <div class="table-responsive">
+                            <table id="users-preview-table">
+                                <thead>
+                                    <tr>
+                                        <th>Prénom</th>
+                                        <th>Nom</th>
+                                        <th>CFI</th>
+                                        <th>CONTACT</th>
+                                        <th>CODE BARRE</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-preview-body">
+                                    <!-- Ce tableau sera rempli par JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <p id="users-count" class="mt-2">0 utilisateurs affichés</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Export des radios</h2>
+                    <p>Téléchargez la liste complète des radios au format CSV.</p>
+                    <div class="form-group">
+                        <label for="radios-options">Options d'export :</label>
+                        <select id="radios-options" class="form-control">
+                            <option value="all">Toutes les radios</option>
+                            <option value="disponible">Radios disponibles</option>
+                            <option value="pret">Radios en prêt</option>
+                            <option value="maintenance">Radios en maintenance</option>
+                            <option value="geoloc">Radios géolocalisables</option>
+                        </select>
+                    </div>
+                    <button id="export-radios-btn" class="action-btn">Exporter les radios</button>
+                    <div class="export-preview">
+                        <h3>Aperçu des données</h3>
+                        <div class="table-responsive">
+                            <table id="radios-preview-table">
+                                <thead>
+                                    <tr>
+                                        <th>CODE</th>
+                                        <th>MARQUE</th>
+                                        <th>MODELE</th>
+                                        <th>S/N</th>
+                                        <th>GEOLOC</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="radios-preview-body">
+                                    <!-- Ce tableau sera rempli par JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <p id="radios-count" class="mt-2">0 radios affichées</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <footer class="app-footer">
+        <p>&copy; 2025 SNSM - Système de gestion des radios</p>
+    </footer>
+
+    <script src="{{ url_for('static', path='/js/export.js') }}"></script>
+</body>
+</html>

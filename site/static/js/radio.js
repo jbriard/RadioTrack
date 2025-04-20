@@ -497,54 +497,54 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     
     // Gérer la soumission du formulaire de radio
-    async function handleRadioFormSubmit(event) {
-        event.preventDefault();
+async function handleRadioFormSubmit(event) {
+    event.preventDefault();
+    
+    try {
+        const formData = {
+            marque: document.getElementById('marque').value,
+            modele: document.getElementById('modele').value,
+            numero_serie: document.getElementById('numero-serie').value,
+            est_geolocalisable: document.getElementById('geolocalisable').checked
+            // Le champ accessoires a été retiré car déplacé vers la table Pret
+        };
         
-        try {
-            const formData = {
-                marque: document.getElementById('marque').value,
-                modele: document.getElementById('modele').value,
-                numero_serie: document.getElementById('numero-serie').value,
-                est_geolocalisable: document.getElementById('geolocalisable').checked,
-                accessoires: 'aucun' // Valeur par défaut pour compatibilité
-            };
-            
-            let response;
-            
-            if (currentRadioId) {
-                // Modification
-                response = await fetch(`/api/radios/${currentRadioId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
-            } else {
-                // Création
-                response = await fetch('/api/radios/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
-            }
-            
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || 'Erreur lors de l\'opération');
-            }
-            
-            closeAllModals();
-            loadRadios();
-            showMessage(currentRadioId ? 'Radio modifiée avec succès' : 'Radio ajoutée avec succès', 'success');
-            
-        } catch (error) {
-            console.error('Erreur:', error);
-            showMessage(error.message, 'error');
+        let response;
+        
+        if (currentRadioId) {
+            // Modification
+            response = await fetch(`/api/radios/${currentRadioId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+        } else {
+            // Création
+            response = await fetch('/api/radios/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
         }
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || 'Erreur lors de l\'opération');
+        }
+        
+        closeAllModals();
+        loadRadios();
+        showMessage(currentRadioId ? 'Radio modifiée avec succès' : 'Radio ajoutée avec succès', 'success');
+        
+    } catch (error) {
+        console.error('Erreur:', error);
+        showMessage(error.message, 'error');
     }
+}
     
     // Gérer la soumission du formulaire de maintenance
     async function handleMaintenanceFormSubmit(event) {

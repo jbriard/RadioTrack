@@ -2,7 +2,7 @@ from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, Session
 from sqlalchemy.schema import Index, UniqueConstraint
-from datetime import datetime
+from datetime import datetime, timezone
 import os
 
 # Création de la connexion à la base de données
@@ -20,7 +20,7 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now)
     last_login = Column(DateTime, nullable=True)
 
 class CFI(Base):
@@ -32,8 +32,8 @@ class CFI(Base):
     adresse = Column(String)
     telephone = Column(String)
     email = Column(String)
-    date_creation = Column(DateTime, default=datetime.utcnow)
-    date_modification = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    date_creation = Column(DateTime, default=datetime.now)
+    date_modification = Column(DateTime, default=datetime.now, onupdate=datetime.now)
     
     personnes = relationship("Personne", back_populates="cfi")
     
@@ -48,8 +48,8 @@ class Equipe(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     nom = Column(String, nullable=False)
     categorie = Column(String, CheckConstraint("categorie IN ('secours', 'logistique', 'direction', 'externe')"), nullable=False)
-    date_creation = Column(DateTime, default=datetime.utcnow)
-    date_modification = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    date_creation = Column(DateTime, default=datetime.now)
+    date_modification = Column(DateTime, default=datetime.now, onupdate=datetime.now)
     
     membres = relationship("Personne", back_populates="equipe")
     
@@ -68,8 +68,8 @@ class Personne(Base):
     prenom = Column(String, nullable=False)
     id_cfi = Column(Integer, ForeignKey("CFI.id"), nullable=True)
     id_equipe = Column(Integer, ForeignKey("Equipe.id"), nullable=True)
-    date_creation = Column(DateTime, default=datetime.utcnow)
-    date_modification = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    date_creation = Column(DateTime, default=datetime.now)
+    date_modification = Column(DateTime, default=datetime.now, onupdate=datetime.now)
     
     cfi = relationship("CFI", back_populates="personnes")
     equipe = relationship("Equipe", back_populates="membres")
@@ -94,8 +94,8 @@ class Radio(Base):
     est_geolocalisable = Column(Boolean, default=False, nullable=False)
     # La colonne accessoires a été retirée car elle est maintenant dans la table Pret
     en_maintenance = Column(Boolean, default=False, nullable=False)
-    date_creation = Column(DateTime, default=datetime.utcnow)
-    date_modification = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    date_creation = Column(DateTime, default=datetime.now)
+    date_modification = Column(DateTime, default=datetime.now, onupdate=datetime.now)
     
     prets = relationship("Pret", back_populates="radio")
     maintenances = relationship("Maintenance", back_populates="radio")
@@ -113,7 +113,7 @@ class Pret(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     id_radio = Column(Integer, ForeignKey("Radio.id"), nullable=False)
     id_personne = Column(Integer, ForeignKey("Personne.id"), nullable=False)
-    date_emprunt = Column(DateTime, default=datetime.utcnow, nullable=False)
+    date_emprunt = Column(DateTime, default=datetime.now, nullable=False)
     date_retour = Column(DateTime, nullable=True)
     commentaire = Column(Text, nullable=True)
     # Nouvelle colonne pour les accessoires
@@ -138,7 +138,7 @@ class Maintenance(Base):
     
     id = Column(Integer, primary_key=True, autoincrement=True)
     id_radio = Column(Integer, ForeignKey("Radio.id"), nullable=False)
-    date_debut = Column(DateTime, default=datetime.utcnow, nullable=False)
+    date_debut = Column(DateTime, default=datetime.now, nullable=False)
     date_fin = Column(DateTime, nullable=True)
     description = Column(Text, nullable=False)
     operateur = Column(String, nullable=False)

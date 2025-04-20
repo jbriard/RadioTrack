@@ -1,0 +1,163 @@
+/* Styles pour la page d'impression d'étiquettes */
+
+/* Style pour la prévisualisation de code-barre */
+#barcode-preview {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    margin: 20px 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#barcode-preview img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Style pour les messages d'aide */
+.input-help {
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 5px;
+}
+
+/* Style pour les informations de statut */
+.form-info {
+    margin-top: 5px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.form-info.success {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border-left: 3px solid #2e7d32;
+}
+
+.form-info.error {
+    background-color: #ffebee;
+    color: #c62828;
+    border-left: 3px solid #c62828;
+}
+
+/* Style pour les badges de statut */
+.status-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    font-size: 0.8rem;
+    border-radius: 10px;
+    color: white;
+    font-weight: bold;
+}
+
+.status-available {
+    background-color: #4caf50;
+}
+
+.status-loaned {
+    background-color: #ff9800;
+}
+
+.status-maintenance {
+    background-color: #f44336;
+}
+
+/* Style pour les cases à cocher et les champs en ligne */
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.checkbox-container input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+/* Style pour la table de résultats de recherche */
+#search-results-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+#search-results-table th {
+    background-color: #f5f5f5;
+    padding: 10px;
+    text-align: left;
+    border-bottom: 2px solid #ddd;
+}
+
+#search-results-table td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+#search-results-table tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* Style pour les boutons d'action dans les tableaux */
+.action-btn {
+    padding: 5px 10px;
+    margin-right: 5px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.preview-btn, .generate-single-btn {
+    background-color: #2196f3;
+    color: white;
+}
+
+.preview-btn:hover, .generate-single-btn:hover {
+    background-color: #0d8bf2;
+}
+
+/* Ajustement pour les petits écrans */
+@media screen and (max-width: 768px) {
+    .dashboard-cards {
+        flex-direction: column;
+    }
+    
+    .card {
+        margin-bottom: 20px;
+    }
+    
+    .table-responsive {
+        overflow-x: auto;
+    }
+    
+    .action-btn {
+        padding: 4px 8px;
+        font-size: 0.8rem;
+    }
+}
+
+/* Style pour le mode impression */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    
+    #barcode-preview, #barcode-preview * {
+        visibility: visible;
+    }
+    
+    #barcode-preview {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        border: none;
+        box-shadow: none;
+    }
+    
+    .app-header, .sidebar, .app-footer, .controls {
+        display: none;
+    }
+}

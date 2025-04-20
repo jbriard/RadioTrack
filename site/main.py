@@ -19,6 +19,9 @@ from routes.equipe import router as equipe_router
 from routes.personne import router as personne_router
 from routes.pret import router as pret_router  # Nouvelle importation pour les prêts
 from routes.cfi import router as cfi_router    # Nouvelle importation pour les CFIs
+from routes.etiquette import router as etiquette_router
+from routes.historique import router as historique_router
+from routes.maintenance import router as maintenance_router  # Nouvelle importation pour la maintenance
 
 
 # Création de l'application FastAPI
@@ -30,6 +33,9 @@ app.include_router(equipe_router)
 app.include_router(personne_router)
 app.include_router(pret_router)  # Ajout du routeur pour les prêts
 app.include_router(cfi_router)   # Ajout du routeur pour les CFIs
+app.include_router(etiquette_router)  # Ajout du routeur pour les étiquettes
+app.include_router(historique_router)
+app.include_router(maintenance_router)
 
 # Création des tables de base de données
 create_tables()
@@ -66,7 +72,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     )
     
     # Mise à jour de la dernière connexion
-    user.last_login = datetime.utcnow()
+    user.last_login = datetime.now()
     db.commit()
     
     # Créer une réponse de redirection avec le statut 303 (See Other)
@@ -156,6 +162,38 @@ async def cfis_page(request: Request, current_user: User = Depends(get_current_a
         "cfis.html",
         {"request": request, "user": current_user}
     )
+
+# Route pour la page d'impression d'étiquettes
+@app.get("/etiquettes", response_class=HTMLResponse)
+async def etiquettes_page(request: Request, current_user: User = Depends(get_current_active_user)):
+    return templates.TemplateResponse(
+        "etiquettes.html",
+        {"request": request, "user": current_user}
+    )
+
+
+# Route pour la page d'export CSV
+@app.get("/export", response_class=HTMLResponse)
+async def export_page(request: Request, current_user: User = Depends(get_current_active_user)):
+    return templates.TemplateResponse(
+        "export.html",
+        {"request": request, "user": current_user}
+    )
+
+@app.get("/historique", response_class=HTMLResponse)
+async def historique_page(request: Request, current_user: User = Depends(get_current_active_user)):
+    return templates.TemplateResponse(
+        "historique.html",
+        {"request": request, "user": current_user}
+    )
+
+@app.get("/maintenance", response_class=HTMLResponse)
+async def maintenance_page(request: Request, current_user: User = Depends(get_current_active_user)):
+    return templates.TemplateResponse(
+        "maintenance.html",
+        {"request": request, "user": current_user}
+    )
+
 
 # Route de déconnexion
 @app.get("/logout")

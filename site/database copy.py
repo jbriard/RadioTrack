@@ -1,23 +1,20 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, create_engine, CheckConstraint, event, DDL, text, Index, func
+from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime, ForeignKey, Text, CheckConstraint, event, DDL
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, Session
+from sqlalchemy.schema import Index, UniqueConstraint
 from datetime import datetime
 import os
 
-# Création du moteur SQLite
-DATABASE_URL = "sqlite:///./app.db"
+# Création de la connexion à la base de données
+DATABASE_URL = "sqlite:///./radio_tracker.db"
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-
-# Création d'une session
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Création du modèle de base
 Base = declarative_base()
 
-# Modèle Utilisateur
+# Définition des modèles SQLAlchemy
 class User(Base):
     __tablename__ = "users"
-
+    
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     email = Column(String, unique=True, index=True)
@@ -26,312 +23,208 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     last_login = Column(DateTime, nullable=True)
 
-# Modèle CFI
 class CFI(Base):
-    __tablename__ = "cfi"
-
-    id = Column(Integer, primary_key=True, index=True)
+    __tablename__ = "CFI"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
     nom = Column(String, nullable=False)
     responsable = Column(String, nullable=False)
-    adresse = Column(String, nullable=True)
-    telephone = Column(String, nullable=True)
-    email = Column(String, nullable=True)
+    adresse = Column(String)
+    telephone = Column(String)
+    email = Column(String)
     date_creation = Column(DateTime, default=datetime.utcnow)
-    date_modification = Column(DateTime, default=datetime.utcnow)
+    date_modification = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relations
     personnes = relationship("Personne", back_populates="cfi")
-
-# Modèle Equipe
-class Equipe(Base):
-    __tablename__ = "equipe"
-
-    id = Column(Integer, primary_key=True, index=True)
-    nom = Column(String, nullable=False)
-    categorie = Column(String, nullable=False)
-    date_creation = Column(DateTime, default=datetime.utcnow)
-    date_modification = Column(DateTime, default=datetime.utcnow)
     
-    # Contrainte pour les catégories
+    # Index pour optimiser les recherches
     __table_args__ = (
-        CheckConstraint("categorie IN ('secours', 'logistique', 'direction', 'externe')", name="check_categorie"),
+        Index('idx_cfi_nom', 'nom'),
     )
+
+class Equipe(Base):
+    __tablename__ = "Equipe"
     
-    # Relations
-    personnes = relationship("Personne", back_populates="equipe")
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    nom = Column(String, nullable=False)
+    categorie = Column(String, CheckConstraint("categorie IN ('secours', 'logistique', 'direction', 'externe')"), nullable=False)
+    date_creation = Column(DateTime, default=datetime.utcnow)
+    date_modification = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    membres = relationship("Personne", back_populates="equipe")
+    
+    # Index pour optimiser les recherches
+    __table_args__ = (
+        Index('idx_equipe_nom', 'nom'),
+        Index('idx_equipe_categorie', 'categorie'),
+    )
 
-# Modèle Personne
 class Personne(Base):
-    __tablename__ = "personne"
-
-    id = Column(Integer, primary_key=True, index=True)
-    code_barre = Column(String, unique=True, nullable=False)
+    __tablename__ = "Personne"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    code_barre = Column(String, unique=True)
     nom = Column(String, nullable=False)
     prenom = Column(String, nullable=False)
-    id_cfi = Column(Integer, ForeignKey("cfi.id"), nullable=True)
-    id_equipe = Column(Integer, ForeignKey("equipe.id"), nullable=False)
+    id_cfi = Column(Integer, ForeignKey("CFI.id"), nullable=True)
+    id_equipe = Column(Integer, ForeignKey("Equipe.id"), nullable=True)
     date_creation = Column(DateTime, default=datetime.utcnow)
-    date_modification = Column(DateTime, default=datetime.utcnow)
+    date_modification = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Contrainte pour le format du code-barre
-    __table_args__ = (
-        CheckConstraint("code_barre LIKE 'USR-%' AND LENGTH(SUBSTR(code_barre, 5)) = 5", name="check_code_barre_format"),
-        Index("idx_personne_cfi", "id_cfi"),
-        Index("idx_personne_equipe", "id_equipe"),
-        Index("idx_personne_code_barre", "code_barre"),
-    )
-    
-    # Relations
     cfi = relationship("CFI", back_populates="personnes")
-    equipe = relationship("Equipe", back_populates="personnes")
+    equipe = relationship("Equipe", back_populates="membres")
     prets = relationship("Pret", back_populates="personne")
+    
+    # Index pour optimiser les recherches
+    __table_args__ = (
+        Index('idx_personne_nom_prenom', 'nom', 'prenom'),
+        Index('idx_personne_code_barre', 'code_barre'),
+        Index('idx_personne_id_cfi', 'id_cfi'),
+        Index('idx_personne_id_equipe', 'id_equipe'),
+    )
 
-# Modèle Radio
 class Radio(Base):
-    __tablename__ = "radio"
-
-    id = Column(Integer, primary_key=True, index=True)
-    code_barre = Column(String, unique=True, nullable=False)
+    __tablename__ = "Radio"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    code_barre = Column(String, unique=True)
     marque = Column(String, nullable=False)
     modele = Column(String, nullable=False)
-    numero_serie = Column(String, nullable=True)  # Peut être null contrairement à db-final.sql
+    numero_serie = Column(String)
     est_geolocalisable = Column(Boolean, default=False, nullable=False)
+    # La colonne accessoires a été retirée car elle est maintenant dans la table Pret
     en_maintenance = Column(Boolean, default=False, nullable=False)
     date_creation = Column(DateTime, default=datetime.utcnow)
-    date_modification = Column(DateTime, default=datetime.utcnow)
+    date_modification = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Contraintes pour le format du code-barre et les options d'accessoires
-    __table_args__ = (
-        CheckConstraint("code_barre LIKE 'RAD-%' AND LENGTH(SUBSTR(code_barre, 5)) = 5", name="check_code_barre_radio_format"),
-        Index("idx_radio_maintenance", "en_maintenance"),
-        Index("idx_radio_code_barre", "code_barre"),
-    )
-    
-    # Relations
     prets = relationship("Pret", back_populates="radio")
     maintenances = relationship("Maintenance", back_populates="radio")
-
-# Modèle Pret
-class Pret(Base):
-    __tablename__ = "pret"
-
-    id = Column(Integer, primary_key=True, index=True)
-    id_radio = Column(Integer, ForeignKey("radio.id"), nullable=False)
-    id_personne = Column(Integer, ForeignKey("personne.id"), nullable=False)
-    date_emprunt = Column(DateTime, default=datetime.utcnow)
-    date_retour = Column(DateTime, nullable=True)
-    commentaire = Column(String, nullable=True)
     
+    # Index pour optimiser les recherches
     __table_args__ = (
-        Index("idx_pret_radio", "id_radio"),
-        Index("idx_pret_personne", "id_personne"),
+        Index('idx_radio_code_barre', 'code_barre'),
+        Index('idx_radio_marque_modele', 'marque', 'modele'),
+        Index('idx_radio_maintenance', 'en_maintenance'),
     )
+
+class Pret(Base):
+    __tablename__ = "Pret"
     
-    # Relations
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    id_radio = Column(Integer, ForeignKey("Radio.id"), nullable=False)
+    id_personne = Column(Integer, ForeignKey("Personne.id"), nullable=False)
+    date_emprunt = Column(DateTime, default=datetime.utcnow, nullable=False)
+    date_retour = Column(DateTime, nullable=True)
+    commentaire = Column(Text, nullable=True)
+    # Nouvelle colonne pour les accessoires
+    accessoires = Column(String, CheckConstraint("accessoires IN ('oreillettes', 'micro', 'les deux', 'aucun')"), 
+                         nullable=False, default="aucun")
+    
     radio = relationship("Radio", back_populates="prets")
     personne = relationship("Personne", back_populates="prets")
+    
+    # Index pour optimiser les recherches
+    __table_args__ = (
+        Index('idx_pret_id_radio', 'id_radio'),
+        Index('idx_pret_id_personne', 'id_personne'),
+        Index('idx_pret_date_emprunt', 'date_emprunt'),
+        Index('idx_pret_date_retour', 'date_retour'),
+        # Index composite pour trouver rapidement les prêts actifs (sans date de retour)
+        Index('idx_pret_actif', 'id_radio', 'date_retour'),
+    )
 
-# Modèle Maintenance
 class Maintenance(Base):
-    __tablename__ = "maintenance"
-
-    id = Column(Integer, primary_key=True, index=True)
-    id_radio = Column(Integer, ForeignKey("radio.id"), nullable=False)
-    date_debut = Column(DateTime, default=datetime.utcnow)
+    __tablename__ = "Maintenance"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    id_radio = Column(Integer, ForeignKey("Radio.id"), nullable=False)
+    date_debut = Column(DateTime, default=datetime.utcnow, nullable=False)
     date_fin = Column(DateTime, nullable=True)
-    description = Column(String, nullable=False)
+    description = Column(Text, nullable=False)
     operateur = Column(String, nullable=False)
     
-    __table_args__ = (
-        Index("idx_maintenance_radio", "id_radio"),
-    )
-    
-    # Relations
     radio = relationship("Radio", back_populates="maintenances")
-
-# Fonction pour générer automatiquement les codes-barres
-def generate_code_barre(prefix, table_name, db_session):
-    try:
-        # Au lieu d'utiliser sqlite_sequence, rechercher le plus grand ID existant
-        max_id_query = text(f"SELECT COALESCE(MAX(id), 0) FROM {table_name}")
-        result = db_session.execute(max_id_query).scalar()
-        next_id = 1 if result is None else int(result) + 1
-    except Exception as e:
-        print(f"Erreur lors de la récupération de l'ID maximum: {e}")
-        # En cas d'erreur, utiliser 1 comme ID par défaut
-        next_id = 1
     
-    # Formater le code-barre avec des zéros de remplissage
-    return f"{prefix}-{next_id:05d}"
-
-# Création des triggers SQLite pour la mise à jour des dates et la gestion de la maintenance
-def create_triggers():
-    # Trigger pour mise à jour date_modification de CFI
-    event.listen(
-        CFI.__table__,
-        'after_create',
-        DDL("""
-        CREATE TRIGGER IF NOT EXISTS update_cfi_date_modification
-        AFTER UPDATE ON cfi
-        BEGIN
-            UPDATE cfi SET date_modification = CURRENT_TIMESTAMP WHERE id = NEW.id;
-        END;
-        """)
-    )
-    
-    # Trigger pour mise à jour date_modification d'Equipe
-    event.listen(
-        Equipe.__table__,
-        'after_create',
-        DDL("""
-        CREATE TRIGGER IF NOT EXISTS update_equipe_date_modification
-        AFTER UPDATE ON equipe
-        BEGIN
-            UPDATE equipe SET date_modification = CURRENT_TIMESTAMP WHERE id = NEW.id;
-        END;
-        """)
-    )
-    
-    # Trigger pour mise à jour date_modification de Personne
-    event.listen(
-        Personne.__table__,
-        'after_create',
-        DDL("""
-        CREATE TRIGGER IF NOT EXISTS update_personne_date_modification
-        AFTER UPDATE ON personne
-        BEGIN
-            UPDATE personne SET date_modification = CURRENT_TIMESTAMP WHERE id = NEW.id;
-        END;
-        """)
-    )
-    
-    # Trigger pour mise à jour date_modification de Radio
-    event.listen(
-        Radio.__table__,
-        'after_create',
-        DDL("""
-        CREATE TRIGGER IF NOT EXISTS update_radio_date_modification
-        AFTER UPDATE ON radio
-        BEGIN
-            UPDATE radio SET date_modification = CURRENT_TIMESTAMP WHERE id = NEW.id;
-        END;
-        """)
-    )
-    
-    # Trigger pour générer automatiquement le code-barre des radios
-    event.listen(
-        Radio.__table__,
-        'after_create',
-        DDL("""
-        CREATE TRIGGER IF NOT EXISTS generate_radio_code_before_insert
-        BEFORE INSERT ON radio
-        WHEN NEW.code_barre IS NULL
-        BEGIN
-            UPDATE sqlite_sequence SET seq = seq + 1 WHERE name = 'radio';
-            SELECT 'RAD-' || SUBSTR('00000' || (SELECT seq FROM sqlite_sequence WHERE name = 'radio'), -5, 5) INTO NEW.code_barre;
-        END;
-        """)
-    )
-    
-    # Trigger pour générer automatiquement le code-barre des personnes
-    event.listen(
-        Personne.__table__,
-        'after_create',
-        DDL("""
-        CREATE TRIGGER IF NOT EXISTS generate_personne_code_before_insert
-        BEFORE INSERT ON personne
-        WHEN NEW.code_barre IS NULL
-        BEGIN
-            UPDATE sqlite_sequence SET seq = seq + 1 WHERE name = 'personne';
-            SELECT 'USR-' || SUBSTR('00000' || (SELECT seq FROM sqlite_sequence WHERE name = 'personne'), -5, 5) INTO NEW.code_barre;
-        END;
-        """)
-    )
-    
-    # Trigger pour mettre à jour automatiquement le flag de maintenance quand une radio est mise en maintenance
-    event.listen(
-        Maintenance.__table__,
-        'after_create',
-        DDL("""
-        CREATE TRIGGER IF NOT EXISTS set_radio_maintenance_on_insert
-        AFTER INSERT ON maintenance
-        WHEN NEW.date_fin IS NULL
-        BEGIN
-            UPDATE radio SET en_maintenance = 1 WHERE id = NEW.id_radio;
-        END;
-        """)
-    )
-    
-    # Trigger pour désactiver le flag de maintenance quand la maintenance est terminée
-    event.listen(
-        Maintenance.__table__,
-        'after_create',
-        DDL("""
-        CREATE TRIGGER IF NOT EXISTS unset_radio_maintenance_on_update
-        AFTER UPDATE ON maintenance
-        WHEN NEW.date_fin IS NOT NULL AND OLD.date_fin IS NULL
-        BEGIN
-            UPDATE radio SET en_maintenance = 0
-            WHERE id = NEW.id_radio
-            AND NOT EXISTS (
-                SELECT 1 FROM maintenance
-                WHERE id_radio = NEW.id_radio AND id != NEW.id AND date_fin IS NULL
-            );
-        END;
-        """)
+    # Index pour optimiser les recherches
+    __table_args__ = (
+        Index('idx_maintenance_id_radio', 'id_radio'),
+        Index('idx_maintenance_date_debut', 'date_debut'),
+        Index('idx_maintenance_date_fin', 'date_fin'),
+        # Index composite pour trouver rapidement les maintenances actives (sans date de fin)
+        Index('idx_maintenance_active', 'id_radio', 'date_fin'),
     )
 
-# Fonction pour ajouter des événements avant insertion
-def add_before_insert_listeners():
-    # Listener pour générer automatiquement le code-barre des radios en Python (fallback)
-    @event.listens_for(Radio, 'before_insert')
-    def generate_radio_code_before_insert(mapper, connection, radio):
-        if radio.code_barre is None:
-            # Utiliser une nouvelle session pour éviter les conflits
-            with SessionLocal() as session:
-                radio.code_barre = generate_code_barre("RAD", "radio", session)
-    
-    # Listener pour générer automatiquement le code-barre des personnes en Python (fallback)
-    @event.listens_for(Personne, 'before_insert')
-    def generate_personne_code_before_insert(mapper, connection, personne):
-        if personne.code_barre is None:
-            # Utiliser une nouvelle session pour éviter les conflits
-            with SessionLocal() as session:
-                personne.code_barre = generate_code_barre("USR", "personne", session)
+# Définition des triggers
 
-# Données initiales pour les catégories d'équipes
-def seed_initial_data():
-    db = SessionLocal()
-    try:
-        # Vérifier si des données existent déjà
-        equipe_count = db.query(Equipe).count()
-        
-        if equipe_count == 0:
-            # Insérer les équipes initiales
-            equipes = [
-                Equipe(nom='Équipe de secours 1', categorie='secours'),
-                Equipe(nom='Équipe de secours 2', categorie='secours'),
-                Equipe(nom='Équipe de secours 3', categorie='secours'),
-                Equipe(nom='Logistique principale', categorie='logistique'),
-                Equipe(nom='Logistique support', categorie='logistique'),
-                Equipe(nom='Direction DPS', categorie='direction'),
-                Equipe(nom='Équipe externe', categorie='externe')
-            ]
-            db.add_all(equipes)
-            db.commit()
-    except Exception as e:
-        db.rollback()
-        print(f"Erreur lors de l'insertion des données initiales: {e}")
-    finally:
-        db.close()
+# Trigger pour générer le code barre des radios
+radio_code_barre_trigger = DDL(
+    """
+    CREATE TRIGGER IF NOT EXISTS generate_radio_code_barre
+    AFTER INSERT ON Radio
+    FOR EACH ROW
+    WHEN NEW.code_barre IS NULL
+    BEGIN
+        UPDATE Radio
+        SET code_barre = 'RAD-' || substr('00000' || NEW.id, -5, 5)
+        WHERE id = NEW.id;
+    END;
+    """
+)
 
-# Création des tables
-def create_tables():
-    Base.metadata.create_all(bind=engine)
-    create_triggers()
-    add_before_insert_listeners()
+# Trigger pour générer le code barre des personnes
+personne_code_barre_trigger = DDL(
+    """
+    CREATE TRIGGER IF NOT EXISTS generate_personne_code_barre
+    AFTER INSERT ON Personne
+    FOR EACH ROW
+    WHEN NEW.code_barre IS NULL
+    BEGIN
+        UPDATE Personne
+        SET code_barre = 'USR-' || substr('00000' || NEW.id, -5, 5)
+        WHERE id = NEW.id;
+    END;
+    """
+)
 
-# Obtenir une session de base de données
+# Trigger pour mettre à jour le statut en_maintenance d'une radio lors de l'ajout d'une maintenance
+update_radio_maintenance_add_trigger = DDL(
+    """
+    CREATE TRIGGER IF NOT EXISTS update_radio_maintenance_status_insert
+    AFTER INSERT ON Maintenance
+    FOR EACH ROW
+    BEGIN
+        UPDATE Radio SET en_maintenance = 1 WHERE id = NEW.id_radio;
+    END;
+    """
+)
+
+# Trigger pour mettre à jour le statut en_maintenance d'une radio lors de la mise à jour d'une maintenance
+update_radio_maintenance_update_trigger = DDL(
+    """
+    CREATE TRIGGER IF NOT EXISTS update_radio_maintenance_status_update
+    AFTER UPDATE ON Maintenance
+    FOR EACH ROW
+    WHEN NEW.date_fin IS NOT NULL AND OLD.date_fin IS NULL
+    BEGIN
+        UPDATE Radio 
+        SET en_maintenance = 
+            CASE WHEN (
+                SELECT COUNT(*) 
+                FROM Maintenance 
+                WHERE id_radio = NEW.id_radio AND date_fin IS NULL
+            ) = 0 THEN 0 ELSE 1 END
+        WHERE id = NEW.id_radio;
+    END;
+    """
+)
+
+# Enregistrement des triggers après la création des tables
+event.listen(Radio.__table__, 'after_create', radio_code_barre_trigger)
+event.listen(Personne.__table__, 'after_create', personne_code_barre_trigger)
+event.listen(Maintenance.__table__, 'after_create', update_radio_maintenance_add_trigger)
+event.listen(Maintenance.__table__, 'after_create', update_radio_maintenance_update_trigger)
+
+# Fonction pour récupérer une session de base de données
 def get_db():
     db = SessionLocal()
     try:
@@ -339,11 +232,50 @@ def get_db():
     finally:
         db.close()
 
-# Initialisation de la base de données
-def init_db():
-    create_tables()
-    seed_initial_data()
+# Fonction pour créer les tables dans la base de données
+def create_tables():
+    Base.metadata.create_all(bind=engine)
 
-# Exécuter si le script est lancé directement
+# Fonction pour exécuter des commandes SQL directement
+def execute_sql(sql):
+    with engine.connect() as conn:
+        conn.execute(sql)
+        conn.commit()
+
+# Fonction pour vérifier et mettre à jour le schéma si nécessaire
+def init_db():
+    # Création des tables si elles n'existent pas déjà
+    create_tables()
+    
+    # Mettre à jour la structure de la table Radio si nécessaire
+    try:
+        # Vérifier si la colonne accessoires existe encore dans la table Radio
+        execute_sql("SELECT accessoires FROM Radio LIMIT 1")
+        # Si aucune exception n'est levée, cela signifie que la colonne existe encore
+        # On exécute la migration pour la retirer
+        print("Migration: suppression de la colonne accessoires de la table Radio")
+        execute_sql("ALTER TABLE Radio DROP COLUMN accessoires")
+    except Exception:
+        # La colonne n'existe pas ou a déjà été supprimée
+        pass
+    
+    # Vérifier si la colonne accessoires existe dans la table Pret
+    try:
+        execute_sql("SELECT accessoires FROM Pret LIMIT 1")
+        # Si aucune exception n'est levée, la colonne existe déjà
+    except Exception:
+        # La colonne n'existe pas, on l'ajoute
+        print("Migration: ajout de la colonne accessoires à la table Pret")
+        execute_sql("""
+            ALTER TABLE Pret 
+            ADD COLUMN accessoires TEXT 
+            CHECK(accessoires IN ('oreillettes', 'micro', 'les deux', 'aucun')) 
+            NOT NULL 
+            DEFAULT 'aucun'
+        """)
+    
+    print("Base de données initialisée avec succès.")
+
+# Si ce fichier est exécuté directement, initialiser la base de données
 if __name__ == "__main__":
     init_db()
