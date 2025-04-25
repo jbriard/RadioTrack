@@ -89,7 +89,7 @@ async def list_cfis(
     total_count = query.count()
     
     # Appliquer pagination
-    cfis = query.offset(skip).limit(limit).all()
+    cfis = query.order_by(CFI.nom).offset(skip).limit(limit).all()
     
     # Convertir les objets SQLAlchemy en dictionnaires
     cfis_data = jsonable_encoder(cfis)

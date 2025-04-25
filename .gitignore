@@ -148,6 +148,11 @@ venv.bak/
 
 # mkdocs documentation
 
+*.db
+*.zip
+*.old
+
+*.kate-swp
 
 # mypy
 .mypy_cache/

@@ -373,20 +373,23 @@ document.addEventListener('DOMContentLoaded', function() {
         const csvRows = [];
         
         // En-tête
-        csvRows.push('CODE,MARQUE,MODELE,S/N,GEOLOC');
+        csvRows.push('CODE,MARQUE,MODELE,S/N,GEOLOC,ID');
         
         // Données
         filteredRadios.forEach(radio => {
+
+
             // Formatage pour l'export
             const geoloc = radio.est_geolocalisable ? 'OUI' : 'NON';
             
             // Échapper les virgules dans les champs
+            const idradio = radio.id;
             const code = radio.code_barre ? `"${radio.code_barre.replace(/"/g, '""')}"` : '';
             const marque = radio.marque ? `"${radio.marque.replace(/"/g, '""')}"` : '';
             const modele = radio.modele ? `"${radio.modele.replace(/"/g, '""')}"` : '';
             const sn = radio.numero_serie ? `"${radio.numero_serie.replace(/"/g, '""')}"` : '';
             
-            csvRows.push(`${code},${marque},${modele},${sn},${geoloc}`);
+            csvRows.push(`${code},${marque},${modele},${sn},${geoloc},${idradio}`);
         });
         
         // Créer le contenu CSV
