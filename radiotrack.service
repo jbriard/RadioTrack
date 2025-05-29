@@ -4,9 +4,9 @@ After=multi-user.target
 
 [Service]
 Type=idle
-WorkingDirectory=/home/radiotrack/site
+WorkingDirectory=/home/radiotrack/RadioTrack/site
 User=radiotrack
-ExecStart=/usr/bin/python /home/radiotrack/site/run.py
+ExecStart=/usr/bin/python /home/radiotrack/RadioTrack/site/run.py
 
 [Install]
 WantedBy=multi-user.target
